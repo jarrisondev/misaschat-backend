@@ -1,0 +1,29 @@
+{
+  "name": "misaschat-backend",
+  "version": "1.0.0",
+  "description": "API of socket.io for misaschat-app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jarrisoncano/misaschat-backend.git"
+  },
+  "keywords": [],
+  "author": "jarrisoncano",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jarrisoncano/misaschat-backend/issues"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "socket.io": "4.1.2"
+  },
+  "devDependencies": {
+    "dotenv": "^10.0.0",
+    "nodemon": "2.0.10"
+  }
+}
