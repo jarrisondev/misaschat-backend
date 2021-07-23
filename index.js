@@ -21,5 +21,8 @@ const io = require('socket.io')(server,{
 
 io.on('connection', (socket)=>{
   console.log('new connection')
-  socket.on('60ee46c949cde3054cc0523a', (data)=> console.log(data))
+  socket.on('60ee46c949cde3054cc0523a', (data)=> {
+    console.log(data)
+    socket.broadcast.emit('60ee46c949cde3054cc0523a', data)
+  })
 })
