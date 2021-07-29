@@ -18,6 +18,11 @@ app.get('/',(req, res) =>{
   res.send('are you lost?')
 })
 
+app.use(function(req, res, next) {
+  res.status(404)
+  res.send('404: File Not Found')
+})
+
 const io = require('socket.io')(server,{
   cors:{
     origin: process.env.SOCKET_CLIENT_URL,
