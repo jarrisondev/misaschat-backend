@@ -1,7 +1,9 @@
 require('dotenv').config()
+require('./mongoDB/connect')
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const ChatModel = require('./mongoDB/chat.model')
 
 app.use(cors())
 app.use(express.json())
@@ -12,6 +14,10 @@ const server = app.listen(app.get('PORT'), () => {
   console.log('Server init on PORT', app.get('PORT'))
 })
 
+app.get('/',(req, res) =>{
+  res.send('are you lost?')
+})
+
 const io = require('socket.io')(server,{
   cors:{
     origin: process.env.SOCKET_CLIENT_URL,
@@ -19,10 +25,13 @@ const io = require('socket.io')(server,{
   }
 })
 
-io.on('connection', (socket)=>{
-  console.log('new connection')
-  socket.on('60ee46c949cde3054cc0523a', (data)=> {
-    console.log(data)
-    socket.broadcast.emit('60ee46c949cde3054cc0523a', data)
+io.on('connection', async (socket)=>{
+  const chats = await ChatModel.find({})
+
+  chats.forEach((chat)=>{
+    socket.on(chat._id, async (data)=> {
+      socket.broadcast.emit(chat._id, data)
+      await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages: data.message}})
+    })
   })
 })
