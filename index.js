@@ -4,6 +4,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const ChatModel = require('./mongoDB/chat.model')
+const UserModel = require('./mongoDB/user.model')
 
 app.use(cors())
 app.use(express.json())
@@ -30,13 +31,36 @@ const io = require('socket.io')(server,{
   }
 })
 
-io.on('connection', async (socket)=>{
-  const chats = await ChatModel.find({})
+io.on('connection', (socket)=>{
+  const chatsListen = ChatModel.watch()
+  
+  const uploadchats = async () =>{
+    const chats = await ChatModel.find({})
 
-  chats.forEach((chat)=>{
-    socket.on(chat._id, async (data)=> {
-      socket.broadcast.emit(chat._id, data)
-      await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages: data.message}})
+    chats.forEach((chat) => {
+      socket.on(chat._id, async (data) => {
+        socket.broadcast.emit(chat._id, data)
+        await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages: data.message}})
+      })
     })
+  }
+
+  const uploadUsers = async () =>{
+    const users = await UserModel.find({})
+
+    users.forEach((user) => {
+      socket.on(user._id, () => {
+        socket.broadcast.emit(user._id)
+      })
+    })
+  }
+
+  chatsListen.on('change', (changes) => {
+    if(changes.operationType === 'insert'){
+      uploadchats()
+    }
   })
+  
+  uploadUsers()
+  uploadchats()
 })
