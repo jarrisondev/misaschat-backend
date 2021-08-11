@@ -32,8 +32,10 @@ const io = require('socket.io')(server,{
 })
 
 io.on('connection', (socket)=>{
-  const chatsListen = ChatModel.watch()
+  const chatsListener = ChatModel.watch()
+  const UserListener = UserModel.watch()
   
+// update socketsListeners when a new chat is created
   const uploadchats = async () =>{
     const chats = await ChatModel.find({})
 
@@ -44,7 +46,7 @@ io.on('connection', (socket)=>{
       })
     })
   }
-
+// update socketsListeners when a new user is created
   const uploadUsers = async () =>{
     const users = await UserModel.find({})
 
@@ -55,9 +57,17 @@ io.on('connection', (socket)=>{
     })
   }
 
-  chatsListen.on('change', (changes) => {
+  chatsListener.on('change', (changes) => {
     if(changes.operationType === 'insert'){
       uploadchats()
+    }
+  })
+  
+  UserListener.on('change', (changes) => {
+    if(changes.operationType === 'insert'){
+      // send a socket to update the listUsers of users online
+      socket.emit('new-user-created')
+      uploadUsers()
     }
   })
   
