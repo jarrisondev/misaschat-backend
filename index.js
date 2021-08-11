@@ -8,46 +8,51 @@ const UserModel = require('./mongoDB/user.model')
 
 app.use(cors())
 app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({extended: false}))
 app.set('PORT', process.env.PORT || 5000)
 
 const server = app.listen(app.get('PORT'), () => {
   console.log('Server init on PORT', app.get('PORT'))
 })
 
-app.get('/',(req, res) =>{
+app.get('/', (req, res) => {
   res.send('are you lost?')
 })
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.status(404)
   res.send('404: File Not Found')
 })
 
-const io = require('socket.io')(server,{
-  cors:{
+const io = require('socket.io')(server, {
+  cors: {
     origin: process.env.SOCKET_CLIENT_URL,
-    methods:["POST, GET"]
+    methods: ['POST, GET']
   }
 })
 
-io.on('connection', (socket)=>{
+io.on('connection', async (socket) => {
   const chatsListener = ChatModel.watch()
   const UserListener = UserModel.watch()
-  
-// update socketsListeners when a new chat is created
-  const uploadchats = async () =>{
+
+  // update socketsListeners when a new chat is created
+  const uploadchats = async () => {
     const chats = await ChatModel.find({})
 
-    chats.forEach((chat) => {
-      socket.on(chat._id, async (data) => {
-        socket.broadcast.emit(chat._id, data)
-        await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages: data.message}})
+    if (chats.length !== 0) {
+      chats.forEach((chat) => {
+        socket.on(chat._id, async (message) => {
+          socket.broadcast.emit(chat._id, message)
+          await ChatModel.findByIdAndUpdate(chat._id, {
+            $push: {messages: message}
+          })
+        })
       })
-    })
+    }
   }
-// update socketsListeners when a new user is created
-  const uploadUsers = async () =>{
+
+  // update socketsListeners when a new user is created
+  const uploadUsers = async () => {
     const users = await UserModel.find({})
 
     users.forEach((user) => {
@@ -57,20 +62,20 @@ io.on('connection', (socket)=>{
     })
   }
 
-  chatsListener.on('change', (changes) => {
-    if(changes.operationType === 'insert'){
-      uploadchats()
+  chatsListener.on('change', async (changes) => {
+    if (changes.operationType === 'insert') {
+      await uploadchats()
     }
   })
-  
-  UserListener.on('change', (changes) => {
-    if(changes.operationType === 'insert'){
+
+  UserListener.on('change', async (changes) => {
+    if (changes.operationType === 'insert') {
       // send a socket to update the listUsers of users online
       socket.emit('new-user-created')
-      uploadUsers()
+      await uploadUsers()
     }
   })
-  
-  uploadUsers()
-  uploadchats()
+
+  await uploadUsers()
+  await uploadchats()
 })

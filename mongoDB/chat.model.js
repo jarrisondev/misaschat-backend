@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose')
+const {Schema, model} = require('mongoose')
 
 const chatSchema = new Schema({
   names: Array,
@@ -6,4 +6,4 @@ const chatSchema = new Schema({
   messages: Array
 })
 
-module.exports =  model('chats', chatSchema)
+module.exports = model('chats', chatSchema)
