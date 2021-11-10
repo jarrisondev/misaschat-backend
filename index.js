@@ -41,10 +41,11 @@ io.on('connection', async (socket) => {
 
     if (chats.length !== 0) {
       chats.forEach((chat) => {
-        socket.on(chat._id, async (message) => {
-          socket.broadcast.emit(chat._id, message)
+        //listen a new message for each chat
+        socket.on(chat._id, async (newMessage) => {
+          socket.broadcast.emit(chat._id, newMessage)
           await ChatModel.findByIdAndUpdate(chat._id, {
-            $push: {messages: message}
+            $push: {messages: newMessage}
           })
         })
       })
